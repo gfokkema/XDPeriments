@@ -1,7 +1,5 @@
 #include "xdp_demo.h"
 
-#include <bpf/bpf_helpers.h>
-
 static char* descs[] = {
     "IPv4",
     "IPv6"
@@ -29,25 +27,6 @@ void swap_eth(struct ethhdr *eth)
     memcpy(swap_eth, eth->h_dest, ETH_ALEN);
     memcpy(eth->h_dest, eth->h_source, ETH_ALEN);
     memcpy(eth->h_source, swap_eth, ETH_ALEN);
-}
-
-static __always_inline
-void debug_v4(struct iphdr *ipv4, struct udphdr *udp)
-{
-    __u8 saddr[4];
-    __u8 daddr[4];
-    memcpy(saddr, &ipv4->saddr, 4);
-    memcpy(daddr, &ipv4->daddr, 4);
-    bpf_printk("IP: %d.%d.%d.%d -> %d.%d.%d.%d",
-        saddr[0], saddr[1], saddr[2], saddr[3],
-        daddr[0], daddr[1], daddr[2], daddr[3]
-    );
-}
-
-static __always_inline
-void debug_v6(struct ipv6hdr *ipv6, struct udphdr *udp)
-{
-
 }
 
 static __always_inline
@@ -90,7 +69,7 @@ int xdp_prog(struct xdp_md *ctx)
         debug_print(eth, udp, dns);
         swap_ipv4(ipv4);
         swap_eth(eth);
-        debug_v4(ipv4, udp);
+        debug_v4("XDP", ipv4, udp);
     }
     if (IS_IPV6(eth_proto))
     {
